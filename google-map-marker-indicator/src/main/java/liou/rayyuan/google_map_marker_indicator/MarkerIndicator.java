@@ -18,6 +18,8 @@ import android.util.TypedValue;
  */
 public class MarkerIndicator {
 
+    private Context context;
+
     @ColorRes
     private int backgroundColor;
     @ColorRes
@@ -33,10 +35,11 @@ public class MarkerIndicator {
     private Paint indicatorBackground;
     private Paint indicatorStrike;
     private Paint textPaint;
+
     private boolean drawDebugBackgroundRect;
 
     public MarkerIndicator(@NonNull Context context) {
-        this(context, -1, -1, 0, -1, 0, 0, 0, 0);
+        this(context, -1, -1, 0, -1, 0, 0, 0, 0, false);
     }
 
     public MarkerIndicator(@NonNull Context context, @ColorRes int color,
@@ -44,8 +47,10 @@ public class MarkerIndicator {
                            @ColorRes int textColor, @FloatRange(from = 0.0) float textSize,
                            @FloatRange(from = 0.0) float indicatorRadius,
                            @FloatRange(from = 0.0) float indicatorMarginTop,
-                           @FloatRange(from = 0.0) float indicatorMarginEnd) {
+                           @FloatRange(from = 0.0) float indicatorMarginEnd,
+                           boolean autoConvertToDp) {
 
+        this.context = context;
         this.backgroundColor = color;
         if (color == -1) {
             this.backgroundColor = R.color.white;
@@ -56,10 +61,10 @@ public class MarkerIndicator {
             this.strokeColor = R.color.primary_orange;
         }
 
-        this.strokeWidth = strokeWidth;
+        this.strokeWidth = autoConvertToDp ? convertPxToDp(strokeWidth) : strokeWidth;
         if (strokeWidth == 0) {
             // default width is 1dp
-            this.strokeWidth = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 1f, context.getResources().getDisplayMetrics());
+            this.strokeWidth = convertPxToDp(1f);
         }
 
         this.textColor = textColor;
@@ -67,20 +72,20 @@ public class MarkerIndicator {
             this.textColor = R.color.primary_orange;
         }
 
-        this.textSize = textSize;
+        this.textSize = autoConvertToDp ? convertPxToDp(textSize) : textSize;
         if (textSize == 0) {
             // default size is 8dp
-            this.textSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 8f, context.getResources().getDisplayMetrics());
+            this.textSize = convertPxToDp(8f);
         }
 
-        this.indicatorRadius = indicatorRadius;
+        this.indicatorRadius = autoConvertToDp ? convertPxToDp(indicatorRadius) : indicatorRadius;
         if (indicatorRadius == 0) {
             // default size is 2.5dp
-            this.indicatorRadius = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2.5f, context.getResources().getDisplayMetrics());
+            this.indicatorRadius = convertPxToDp(2.5f);
         }
 
-        this.indicatorMarginTop = indicatorMarginTop;
-        this.indicatorMarginEnd = indicatorMarginEnd;
+        this.indicatorMarginTop = autoConvertToDp ? convertPxToDp(indicatorMarginTop) : indicatorMarginTop;
+        this.indicatorMarginEnd = autoConvertToDp ? convertPxToDp(indicatorMarginEnd) : indicatorMarginEnd;
 
         initPaints(context);
     }
@@ -105,11 +110,7 @@ public class MarkerIndicator {
         textPaint.setTextAlign(Paint.Align.CENTER);
     }
 
-    public Bitmap attachToMarkerDrawable(Context context, @DrawableRes int drawableId, @Nullable String text) {
-        if (context == null) {
-            return null;
-        }
-
+    public Bitmap attachToMarkerDrawable(@DrawableRes int drawableId, @Nullable String text) {
         String indicatorText = "";
         if (text != null) {
             indicatorText = text;
@@ -147,6 +148,10 @@ public class MarkerIndicator {
         return indicatorRadius;
     }
 
+    private float convertPxToDp(float pixel) {
+        return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, pixel, context.getResources().getDisplayMetrics());
+    }
+
     public static class MarkerIndicatorBuilder {
 
         @ColorRes
@@ -161,6 +166,7 @@ public class MarkerIndicator {
         private float textSize;
         private float indicatorMarginTop;
         private float indicatorMarginEnd;
+        private boolean autoConvertToDp;
 
         private Context context;
 
@@ -208,8 +214,13 @@ public class MarkerIndicator {
             return this;
         }
 
+        public MarkerIndicatorBuilder setAutoConvertToDp(boolean autoConvertToDp) {
+            this.autoConvertToDp = autoConvertToDp;
+            return this;
+        }
+
         public MarkerIndicator build() {
-            return new MarkerIndicator(context, backgroundColor, strokeColor, strokeWidth, textColor, textSize, indicatorRadius, indicatorMarginTop, indicatorMarginEnd);
+            return new MarkerIndicator(context, backgroundColor, strokeColor, strokeWidth, textColor, textSize, indicatorRadius, indicatorMarginTop, indicatorMarginEnd, autoConvertToDp);
         }
     }
 }
